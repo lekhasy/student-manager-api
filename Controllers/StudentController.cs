@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace student_manager_api.Controllers
 {
-    public record RequestResult<T>(T? Data, string Message = "", bool isSuccess = true);
+    public record RequestResult<T>(T? Data);
 
-    public record RequestResult<T, MetaType>(T? Data, MetaType Meta, string Message = "", bool isSuccess = true);
+    public record RequestResult<T, MetaType>(T? Data, MetaType Meta);
 
     public record PagedMeta(int TotalItem);
 
@@ -22,8 +22,6 @@ namespace student_manager_api.Controllers
 
         public record AddStudentVM(DateTime AdmissionDate, string Name, Genders Gender, string PhoneNumber, IFormFile? ImageFile, DateTime Birthday);
         public record ModifyStudentVM(string Id, DateTime AdmissionDate, string Name, Genders Gender, string PhoneNumber, IFormFile? ImageFile, DateTime Birthday);
-
-        private static object lockObj = new();
 
         [HttpGet]
         public RequestResult<IEnumerable<Student>, PagedMeta> GetStudents(string? search, int page, int pageSize)
@@ -39,7 +37,7 @@ namespace student_manager_api.Controllers
         public RequestResult<Student> GetStudent(string id)
         {
             var student = students.Find(s => s.Id == id);
-            return new RequestResult<Student>(student, "", student != null);
+            return new RequestResult<Student>(student);
         }
 
         [HttpPost]
@@ -68,7 +66,7 @@ namespace student_manager_api.Controllers
         }
 
         [HttpPost]
-        public async Task<RequestResult<Student>> ModifyStudent([FromForm] ModifyStudentVM viewModel)
+        public async Task<ActionResult<RequestResult<Student>>> ModifyStudent([FromForm] ModifyStudentVM viewModel)
         {
             var studentId = viewModel.Id;
 
@@ -78,7 +76,7 @@ namespace student_manager_api.Controllers
 
             if (matchStudent == null)
             {
-                return new RequestResult<Student>(null, "student does not exist", false);
+                return NotFound();
             }
 
             if (viewModel.ImageFile != null)
